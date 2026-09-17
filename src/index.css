@@ -1,0 +1,79 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  /*
+   * Warm off-white theme. Slightly warm hue (40) rather than pure white, with
+   * cards a touch lighter than the page so they still read as raised surfaces.
+   * chart-2 / chart-5 are the sentiment up/down pair and are darkened here so
+   * they stay legible as text on a light ground.
+   */
+  :root {
+    --background: 40 24% 96%;
+    --foreground: 40 12% 12%;
+    --card: 40 33% 98%;
+    --card-foreground: 40 12% 12%;
+    --popover: 40 33% 98%;
+    --popover-foreground: 40 12% 12%;
+    --primary: 40 12% 16%;
+    --primary-foreground: 40 33% 98%;
+    --secondary: 40 18% 90%;
+    --secondary-foreground: 40 12% 16%;
+    --muted: 40 18% 90%;
+    /* 38% keeps muted text >=4.5:1 on --card, --background and --secondary */
+    --muted-foreground: 40 8% 38%;
+    --accent: 40 18% 90%;
+    --accent-foreground: 40 12% 16%;
+    --destructive: 0 72% 44%;
+    --destructive-foreground: 40 33% 98%;
+    /* Two light surfaces can only differ so much, so the border does the
+     * separating between the control and content columns. */
+    --border: 40 13% 80%;
+    --input: 40 13% 80%;
+    --ring: 40 12% 40%;
+    --radius: 0.5rem;
+    /* Lightness capped so each stays >=4.5:1 against --card as body text */
+    --chart-1: 24 74% 40%;
+    --chart-2: 152 58% 31%;
+    --chart-3: 197 42% 34%;
+    --chart-4: 43 72% 32%;
+    --chart-5: 3 71% 47%;
+  }
+
+  .dark {
+    --background: 240 10% 3.9%;
+    --foreground: 0 0% 98%;
+    --card: 240 10% 3.9%;
+    --card-foreground: 0 0% 98%;
+    --popover: 240 10% 3.9%;
+    --popover-foreground: 0 0% 98%;
+    --primary: 0 0% 98%;
+    --primary-foreground: 240 5.9% 10%;
+    --secondary: 240 3.7% 15.9%;
+    --secondary-foreground: 0 0% 98%;
+    --muted: 240 3.7% 15.9%;
+    --muted-foreground: 240 5% 64.9%;
+    --accent: 240 3.7% 15.9%;
+    --accent-foreground: 0 0% 98%;
+    --destructive: 0 62.8% 30.6%;
+    --destructive-foreground: 0 0% 98%;
+    --border: 240 3.7% 15.9%;
+    --input: 240 3.7% 15.9%;
+    --ring: 240 4.9% 83.9%;
+    --chart-1: 220 70% 50%;
+    --chart-2: 160 60% 45%;
+    --chart-3: 30 80% 55%;
+    --chart-4: 280 65% 60%;
+    --chart-5: 340 75% 55%;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+  body {
+    @apply bg-background text-foreground;
+  }
+}
