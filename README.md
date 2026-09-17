@@ -132,6 +132,10 @@ npm run preview   # serve the built bundle (no API — use dev or deploy)
 npm run lint      # oxlint
 ```
 
+The included multi-stage `Dockerfile` is the recommended production path. It
+builds the client once, then runs the persistent Node API/static server without
+copying local environment files or development dependencies into the image.
+
 Note that `npm run preview` serves static files only; the `/api` routes need
 either `npm run dev` or a real deployment.
 
