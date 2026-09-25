@@ -48,7 +48,7 @@ const SUBTITLE: Record<View, (t: Dict) => string> = {
   news: (t) => t.subtitleNews,
   account: (t) => t.subtitleAccount,
 }
-const QUOTE_POLL_MS = 5_000
+const QUOTE_POLL_MS = 3_000
 type AddErrorKind =
   | { kind: 'empty' | 'format' }
   | { kind: 'duplicate' | 'notFound'; ticker: string }
@@ -145,7 +145,6 @@ function Dashboard({
   const [addErrorKind, setAddErrorKind] = useState<AddErrorKind | null>(null)
   const [addApiError, setAddApiError] = useState<ApiError | null>(null)
   const [adding, setAdding] = useState(false)
-  const [pollNonce, setPollNonce] = useState(0)
   const [lastUpdated, setLastUpdated] = useState<number | null>(null)
   const [newsSymbol, setNewsSymbol] = useState<string | null>(null)
   const [analysis, setAnalysis] = useState<AnalysisPayload | null>(null)
@@ -186,15 +185,9 @@ function Dashboard({
       setLastUpdated(Date.now())
       return result
     },
-    [symbolKey, pollNonce]
+    [symbolKey],
+    { pollIntervalMs: symbols.length > 0 ? QUOTE_POLL_MS : 0 }
   )
-  useEffect(() => {
-    if (symbols.length === 0) return
-    const timer = window.setInterval(() => {
-      if (document.visibilityState === 'visible') setPollNonce((n) => n + 1)
-    }, QUOTE_POLL_MS)
-    return () => window.clearInterval(timer)
-  }, [symbols.length])
   const newsState = useAsync(
     (signal) => fetchNews(newsSymbol ?? undefined, signal),
     [newsSymbol]

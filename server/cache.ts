@@ -32,9 +32,8 @@ export async function cached<T>(
 }
 
 export const TTL = {
-  // Short, because live prices arrive over the WebSocket rather than from
-  // this snapshot — the cache only guards REST quota for open/high/low/prevClose.
-  quote: 5_000,
+  // REST context is refreshed in the background; live prices arrive via socket.
+  quote: 30_000,
   search: 60 * 60_000,
   news: 60_000,
   polymarket: 60_000,

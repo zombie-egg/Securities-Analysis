@@ -224,7 +224,7 @@ const en: Dict = {
   dayRange: 'Day range',
   prevClose: 'Prev close',
   liveQuotes: 'Live quotes',
-  updatedAt: (time) => `Updated ${time}`,
+  updatedAt: (time) => `Checked ${time}`,
 
   aiDailyFocus: 'AI Daily Focus',
   aiDailyFocusDesc:
@@ -381,7 +381,7 @@ const zh: Dict = {
   dayRange: '日内区间',
   prevClose: '昨收',
   liveQuotes: '实时行情',
-  updatedAt: (time) => `更新于 ${time}`,
+  updatedAt: (time) => `检查于 ${time}`,
 
   aiDailyFocus: 'AI 每日焦点',
   aiDailyFocusDesc: '每条结论均由卡片中列出的真实新闻生成。',

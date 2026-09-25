@@ -16,6 +16,8 @@ export interface Quote {
   low: number
   open: number
   prevClose: number
+  /** Time of Finnhub's latest trade, when supplied by /quote. */
+  quoteAt?: number
 }
 
 export interface Article {
@@ -38,6 +40,7 @@ interface RawQuote {
   l: number
   o: number
   pc: number
+  t?: number // unix seconds of latest trade
 }
 
 interface RawArticle {
@@ -95,58 +98,100 @@ async function companyName(symbol: string): Promise<string> {
   })
 }
 
-/** Real-time quotes for several symbols, fetched concurrently. */
-export async function quotes(symbols: string[]): Promise<Quote[]> {
-  // Fail loudly before fanning out if the server is not configured, rather
-  // than letting the per-symbol catch below turn it into an empty list.
-  key()
+interface QuoteSnapshot {
+  quote: Quote
+  fetchedAt: number
+  refreshing: Promise<void> | null
+  error: unknown | null
+}
 
+const quoteSnapshots = new Map<string, QuoteSnapshot>()
+const initialLoads = new Map<string, Promise<Quote>>()
+
+async function fetchQuote(symbol: string): Promise<Quote> {
+  const [raw, name] = await Promise.all([
+    getJson<RawQuote>(
+      `${BASE}/quote?symbol=${encodeURIComponent(symbol)}&token=${key()}`
+    ),
+    companyName(symbol),
+  ])
+  // Finnhub returns all zeros for an unknown symbol rather than 404.
+  if (!raw.c) {
+    throw new UpstreamError(404, 'UNKNOWN_SYMBOL', `No quote data for ${symbol}.`)
+  }
+  return {
+    symbol,
+    name,
+    price: raw.c,
+    change: raw.d ?? 0,
+    changePct: raw.dp ?? 0,
+    high: raw.h,
+    low: raw.l,
+    open: raw.o,
+    prevClose: raw.pc,
+    quoteAt: raw.t ? raw.t * 1000 : undefined,
+  }
+}
+
+/** Keep a real REST snapshot ready while the WebSocket supplies new trades. */
+async function quoteFor(symbol: string): Promise<Quote> {
+  const snapshot = quoteSnapshots.get(symbol)
+  if (snapshot) {
+    if (Date.now() - snapshot.fetchedAt >= TTL.quote && !snapshot.refreshing) {
+      snapshot.refreshing = fetchQuote(symbol)
+        .then((quote) => {
+          snapshot.quote = quote
+          snapshot.fetchedAt = Date.now()
+          snapshot.error = null
+        })
+        .catch((error: unknown) => {
+          snapshot.error = error
+        })
+        .finally(() => {
+          snapshot.refreshing = null
+        })
+    }
+    // A failed refresh is reported until an actual upstream response succeeds.
+    if (snapshot.error) throw snapshot.error
+    return snapshot.quote
+  }
+
+  let pending = initialLoads.get(symbol)
+  if (!pending) {
+    pending = fetchQuote(symbol).then((quote) => {
+      quoteSnapshots.set(symbol, {
+        quote,
+        fetchedAt: Date.now(),
+        refreshing: null,
+        error: null,
+      })
+      return quote
+    }).finally(() => {
+      initialLoads.delete(symbol)
+    })
+    initialLoads.set(symbol, pending)
+  }
+  return pending
+}
+
+/** Real quotes for several symbols, fetched concurrently on first request. */
+export async function quotes(symbols: string[]): Promise<Quote[]> {
+  key()
   const results = await Promise.all(
     symbols.map(async (symbol) => {
       try {
-        return await cached(`quote:${symbol}`, TTL.quote, async () => {
-          const [raw, name] = await Promise.all([
-            getJson<RawQuote>(
-              `${BASE}/quote?symbol=${encodeURIComponent(symbol)}&token=${key()}`
-            ),
-            companyName(symbol),
-          ])
-          // Finnhub returns all zeros for an unknown symbol rather than 404
-          if (!raw.c) {
-            throw new UpstreamError(
-              404,
-              'UNKNOWN_SYMBOL',
-              `No quote data for ${symbol}.`
-            )
-          }
-          const quote: Quote = {
-            symbol,
-            name,
-            price: raw.c,
-            change: raw.d ?? 0,
-            changePct: raw.dp ?? 0,
-            high: raw.h,
-            low: raw.l,
-            open: raw.o,
-            prevClose: raw.pc,
-          }
-          return quote
-        })
+        return await quoteFor(symbol)
       } catch (err) {
-        // Absorb only per-symbol problems. Auth, rate-limit and config errors
-        // are systemic and must reach the client instead of looking like an
-        // empty result.
+        // A genuinely unknown ticker can remain removable in the watchlist.
         if (
           err instanceof UpstreamError &&
           (err.code === 'UNKNOWN_SYMBOL' || err.status === 404)
-        ) {
-          return null
-        }
+        ) return null
         throw err
       }
     })
   )
-  return results.filter((q): q is Quote => q !== null)
+  return results.filter((quote): quote is Quote => quote !== null)
 }
 
 /** Verify a ticker exists before it is added to the watchlist. */

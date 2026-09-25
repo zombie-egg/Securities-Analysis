@@ -151,12 +151,19 @@ function withLivePrices(quotes: finnhub.Quote[]): finnhub.Quote[] {
 
   return quotes.map((quote) => {
     const hit = live.get(quote.symbol)
-    if (!hit || hit.price === quote.price) return quote
+    // Never let an old socket trade replace a newer REST quote indefinitely.
+    if (
+      !hit ||
+      hit.price === quote.price ||
+      hit.at <= (quote.quoteAt ?? 0) ||
+      Date.now() - hit.at > 5 * 60_000
+    ) return quote
 
     const change = hit.price - quote.prevClose
     return {
       ...quote,
       price: hit.price,
+      quoteAt: hit.at,
       change,
       changePct:
         quote.prevClose === 0 ? 0 : (change / quote.prevClose) * 100,

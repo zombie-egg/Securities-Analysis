@@ -11,6 +11,7 @@ export interface Quote {
   low: number
   open: number
   prevClose: number
+  quoteAt?: number
 }
 
 export interface Article {
