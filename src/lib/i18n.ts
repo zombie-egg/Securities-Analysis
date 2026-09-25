@@ -352,6 +352,7 @@ const zh: Dict = {
       AVATAR_TOO_LARGE: '头像大小不能超过 200 KB。',
       MISSING_FIELDS: '请先完整填写所有字段。',
       OFFLINE: '无法连接到 API 服务器。',
+      TIMEOUT: '行情请求超时，请检查网络连接。',
       BAD_JSON: '服务器返回了无效响应。',
       UNKNOWN: '发生未知错误。',
     }

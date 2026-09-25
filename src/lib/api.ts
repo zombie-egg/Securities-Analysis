@@ -108,13 +108,24 @@ export class ApiError extends Error {
 
 async function request<T>(
   path: string,
-  init?: { method?: string; body?: unknown; signal?: AbortSignal }
+  init?: {
+    method?: string
+    body?: unknown
+    signal?: AbortSignal
+    timeoutMs?: number
+  }
 ): Promise<T> {
+  const timeout = init?.timeoutMs ? AbortSignal.timeout(init.timeoutMs) : null
+  const signal = timeout
+    ? init?.signal
+      ? AbortSignal.any([init.signal, timeout])
+      : timeout
+    : init?.signal
   let res: Response
   try {
     res = await fetch(`/api/${path}`, {
       method: init?.method ?? 'GET',
-      signal: init?.signal,
+      signal,
       credentials: 'include',
       ...(init?.body
         ? {
@@ -124,6 +135,9 @@ async function request<T>(
         : {}),
     })
   } catch (err) {
+    if (timeout?.aborted) {
+      throw new ApiError(504, 'TIMEOUT', 'Quote request timed out.')
+    }
     if (err instanceof Error && err.name === 'AbortError') throw err
     throw new ApiError(0, 'OFFLINE', 'Could not reach the server.')
   }
@@ -232,7 +246,7 @@ export async function fetchQuotes(symbols: string[], signal?: AbortSignal) {
   if (symbols.length === 0) return []
   const data = await request<{ quotes: Quote[] }>(
     `quote?symbols=${encodeURIComponent(symbols.join(','))}`,
-    { signal }
+    { signal, timeoutMs: 15_000 }
   )
   return data.quotes
 }
