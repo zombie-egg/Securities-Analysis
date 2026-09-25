@@ -21,7 +21,7 @@ import {
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import type { ApiError, Quote } from '@/lib/api'
-import { intlLocale, type Dict, type Locale } from '@/lib/i18n'
+import { formatEasternTime, intlLocale, type Dict, type Locale } from '@/lib/i18n'
 import { deltaClass } from '@/lib/sentiment'
 
 interface WatchlistPageProps {
@@ -156,14 +156,11 @@ export function WatchlistPage({
                 {t.tracked(symbols.length)}
                 {lastUpdated
                   ? ` · ${t.updatedAt(
-                      new Date(lastUpdated).toLocaleTimeString(
-                        intlLocale(locale),
-                        {
-                          hour: '2-digit',
-                          minute: '2-digit',
-                          second: '2-digit',
-                        }
-                      )
+                      formatEasternTime(lastUpdated, locale, {
+                        hour: '2-digit',
+                        minute: '2-digit',
+                        second: '2-digit',
+                      })
                     )}`
                   : ''}
               </CardDescription>

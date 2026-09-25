@@ -93,6 +93,7 @@ export interface Dict {
   prevClose: string
   liveQuotes: string
   updatedAt: (time: string) => string
+  easternTime: string
 
   // AI Focus
   aiDailyFocus: string
@@ -225,6 +226,7 @@ const en: Dict = {
   prevClose: 'Prev close',
   liveQuotes: 'Live quotes',
   updatedAt: (time) => `Checked ${time}`,
+  easternTime: 'US Eastern Time',
 
   aiDailyFocus: 'AI Daily Focus',
   aiDailyFocusDesc:
@@ -383,6 +385,7 @@ const zh: Dict = {
   prevClose: '昨收',
   liveQuotes: '实时行情',
   updatedAt: (time) => `检查于 ${time}`,
+  easternTime: '美国东部时间',
 
   aiDailyFocus: 'AI 每日焦点',
   aiDailyFocusDesc: '每条结论均由卡片中列出的真实新闻生成。',
@@ -429,6 +432,19 @@ export const DICT: Record<Locale, Dict> = { en, zh }
 /** Locale tag for Intl formatting. */
 export function intlLocale(locale: Locale) {
   return locale === 'zh' ? 'zh-CN' : 'en-US'
+}
+
+/** Show market-facing timestamps in New York time, regardless of device settings. */
+export function formatEasternTime(
+  value: number | string,
+  locale: Locale,
+  options: Intl.DateTimeFormatOptions
+): string {
+  const time = new Intl.DateTimeFormat(intlLocale(locale), {
+    ...options,
+    timeZone: 'America/New_York',
+  }).format(new Date(value))
+  return `${time} ${DICT[locale].easternTime}`
 }
 
 /** Relative time like "18m ago" / "18 分钟前". */

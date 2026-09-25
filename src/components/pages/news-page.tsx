@@ -18,7 +18,12 @@ import {
   CardTitle,
 } from '@/components/ui/card'
 import { translate, type ApiError, type Article } from '@/lib/api'
-import { intlLocale, relativeTime, type Dict, type Locale } from '@/lib/i18n'
+import {
+  formatEasternTime,
+  relativeTime,
+  type Dict,
+  type Locale,
+} from '@/lib/i18n'
 
 interface NewsPageProps {
   articles: Article[]
@@ -212,7 +217,7 @@ function ArticleDetail({
             <span className="font-medium">{article.source}</span>
             <span>·</span>
             <span>
-              {new Date(article.datetime).toLocaleString(intlLocale(locale), {
+              {formatEasternTime(article.datetime, locale, {
                 dateStyle: 'medium',
                 timeStyle: 'short',
               })}

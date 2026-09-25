@@ -24,7 +24,13 @@ import type {
   FocusResult,
   PredictionMarket,
 } from '@/lib/api'
-import { intlLocale, relativeTime, type Dict, type Locale } from '@/lib/i18n'
+import {
+  formatEasternTime,
+  intlLocale,
+  relativeTime,
+  type Dict,
+  type Locale,
+} from '@/lib/i18n'
 import { SENTIMENT_BADGE } from '@/lib/sentiment'
 
 interface FocusPageProps {
@@ -60,10 +66,10 @@ export function FocusPage({
               {t.aiDailyFocusDesc}
               {payload
                 ? ` · ${t.analyzedAt(
-                    new Date(payload.generatedAt).toLocaleTimeString(
-                      intlLocale(locale),
-                      { hour: '2-digit', minute: '2-digit' }
-                    )
+                    formatEasternTime(payload.generatedAt, locale, {
+                      hour: '2-digit',
+                      minute: '2-digit',
+                    })
                   )}`
                 : ''}
             </CardDescription>
